@@ -57,10 +57,9 @@ async def run_test_case(case: dict):
         return
 
     # Check AI API keys
-    has_ai_key = bool(settings.GEMINI_API_KEY if settings.AI_PROVIDER == "gemini" else settings.OPENAI_API_KEY)
+    has_ai_key = bool(settings.OPENAI_API_KEY or settings.GEMINI_API_KEY)
     if not has_ai_key:
-        print(f"\n⚠️ [Notice]: Active AI key ({'GEMINI_API_KEY' if settings.AI_PROVIDER == 'gemini' else 'OPENAI_API_KEY'}) not configured in .env.")
-        print(f"Current Provider: [{settings.AI_PROVIDER.upper()}]")
+        print("\n⚠️ [Notice]: Neither OPENAI_API_KEY nor GEMINI_API_KEY is configured in .env.")
         return
 
     # 2. Exa Live Extraction

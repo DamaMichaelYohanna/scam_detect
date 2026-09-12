@@ -17,40 +17,27 @@ class AnalyzerService:
         exa_context: str,
         provider_override: Optional[str] = None,
     ) -> Optional[ScamAnalysisResult]:
-        provider = (provider_override or settings.AI_PROVIDER).lower().strip()
-        logger.info(f"🧠 Running scam threat evaluation using AI Provider: [{provider.upper()}]")
+        primary_provider = (provider_override or settings.AI_PROVIDER).lower().strip()
 
-        if provider == "gemini":
-            result = await gemini_service.analyze_message(
-                message_text=message_text,
-                urls=urls,
-                crypto_addresses=crypto_addresses,
-                exa_context=exa_context,
-            )
-            if result:
-                return result
-            # Optional fallback to OpenAI if Gemini fails or is unconfigured
+        # If primary provider is OpenAI (or default)
+        if primary_provider != "gemini":
             if settings.OPENAI_API_KEY:
-                logger.info("Gemini analysis yielded no result; falling back to OpenAI...")
-                return await openai_service.analyze_message(
+                logger.info(f"🧠 [1/2] Analyzing threat using Primary Provider: OPENAI ({settings.OPENAI_MODEL})")
+                result = await openai_service.analyze_message(
                     message_text=message_text,
                     urls=urls,
                     crypto_addresses=crypto_addresses,
                     exa_context=exa_context,
                 )
+                if result:
+                    return result
+                logger.warning("⚠️ OpenAI analysis failed or returned no result. Triggering Gemini fallback...")
+            else:
+                logger.info("ℹ️ OPENAI_API_KEY not configured. Falling back to Google Gemini...")
 
-        else:  # Default: openai
-            result = await openai_service.analyze_message(
-                message_text=message_text,
-                urls=urls,
-                crypto_addresses=crypto_addresses,
-                exa_context=exa_context,
-            )
-            if result:
-                return result
-            # Optional fallback to Gemini if OpenAI fails or is unconfigured
+            # Fallback to Google Gemini
             if settings.GEMINI_API_KEY:
-                logger.info("OpenAI analysis yielded no result; falling back to Gemini...")
+                logger.info(f"✨ [2/2] Running Fallback Analysis with GEMINI ({settings.GEMINI_MODEL})")
                 return await gemini_service.analyze_message(
                     message_text=message_text,
                     urls=urls,
@@ -58,6 +45,30 @@ class AnalyzerService:
                     exa_context=exa_context,
                 )
 
+        # If user explicitly requested Gemini as primary
+        else:
+            if settings.GEMINI_API_KEY:
+                logger.info(f"✨ [1/2] Analyzing threat using Primary Provider: GEMINI ({settings.GEMINI_MODEL})")
+                result = await gemini_service.analyze_message(
+                    message_text=message_text,
+                    urls=urls,
+                    crypto_addresses=crypto_addresses,
+                    exa_context=exa_context,
+                )
+                if result:
+                    return result
+                logger.warning("⚠️ Gemini analysis failed. Triggering OpenAI fallback...")
+
+            if settings.OPENAI_API_KEY:
+                logger.info(f"🧠 [2/2] Running Fallback Analysis with OPENAI ({settings.OPENAI_MODEL})")
+                return await openai_service.analyze_message(
+                    message_text=message_text,
+                    urls=urls,
+                    crypto_addresses=crypto_addresses,
+                    exa_context=exa_context,
+                )
+
+        logger.error("❌ Both AI providers failed or have no valid API keys configured.")
         return None
 
 
