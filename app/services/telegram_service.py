@@ -104,18 +104,21 @@ class TelegramService:
         reply_to_message_id: Optional[int],
         result: ScamAnalysisResult,
         user_name: Optional[str] = None,
+        strike_count: int = 1,
+        max_strikes: int = 5,
         was_banned: bool = False,
         was_deleted: bool = False,
     ) -> Optional[Dict[str, Any]]:
-        badge_map = {
-            "CRITICAL": "🚨 <b>CRITICAL THREAT REMOVED</b> 🚨" if was_banned else "🚨 <b>CRITICAL RISK DETECTED</b> 🚨",
-            "HIGH": "⚠️ <b>SCAM / PHISHING DETECTED</b> ⚠️",
-            "MEDIUM": "⚠️ <b>SUSPICIOUS CONTENT DETECTED</b>",
-            "LOW": "ℹ️ <b>LOW RISK NOTICE</b>",
-            "SAFE": "✅ <b>CONTENT VERIFIED</b>",
-        }
-        header = badge_map.get(result.risk_level, "⚠️ <b>SECURITY ALERT</b>")
+        target = f"@{user_name}" if user_name else "User"
 
+        if was_banned:
+            header = f"🚨 <b>MEMBER REMOVED — STRIKE {strike_count}/{max_strikes}</b> 🚨"
+        elif strike_count >= 3:
+            header = f"⚠️ <b>OFFICIAL WARNING — STRIKE {strike_count}/{max_strikes}</b> ⚠️"
+        else:
+            header = f"🛡️ <b>MALICIOUS CONTENT REMOVED — STRIKE {strike_count}/{max_strikes}</b>"
+
+        escaped_target = html.escape(target)
         escaped_type = html.escape(result.scam_type)
         escaped_summary = html.escape(result.short_summary)
         escaped_advice = html.escape(result.warning_advice)
@@ -123,10 +126,16 @@ class TelegramService:
 
         action_notes = []
         if was_deleted:
-            action_notes.append("🗑️ <i>Malicious message deleted</i>")
+            action_notes.append("🗑️ <i>Malicious message deleted for community safety.</i>")
+        
         if was_banned:
-            target = f"@{user_name}" if user_name else "Offending user"
-            action_notes.append(f"🚫 <b>{html.escape(target)} has been removed and banned from this group.</b>")
+            action_notes.append(f"🚫 <b>{escaped_target} has reached {strike_count} strikes and has been BANNED from this group.</b>")
+        elif strike_count >= 3:
+            remaining = max_strikes - strike_count
+            action_notes.append(
+                f"⚠️ <b>Warning for {escaped_target}:</b> You have accumulated <b>{strike_count}/{max_strikes} strikes</b> for sharing scam/phishing content. "
+                f"<b>{remaining} more strike{'s' if remaining > 1 else ''} will result in an immediate permanent ban.</b>"
+            )
 
         actions_section = ("\n" + "\n".join(action_notes) + "\n") if action_notes else ""
 

@@ -27,12 +27,14 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8000
 
-    # Moderation & Scam Detection Actions
-    RISK_THRESHOLD: float = 0.7            # Threshold for warning message in group
-    BAN_THRESHOLD: float = 0.85            # Threshold (0.0 to 1.0) to auto-ban/kick scammer
-    AUTO_WARN: bool = True                 # Post warning reply in group
-    AUTO_BAN: bool = True                  # Auto-remove/ban user if confidence >= BAN_THRESHOLD
-    AUTO_DELETE_SCAM_MESSAGE: bool = True  # Automatically delete the malicious message
+    # Moderation & Strike Rules
+    RISK_THRESHOLD: float = 0.7            # Threshold for flagging scam
+    BAN_THRESHOLD: float = 0.85            # Confidence threshold to record strike
+    WARN_STRIKES: int = 3                  # Warn user at 3 strikes
+    MAX_STRIKES_BAN: int = 5               # Ban user at 5 strikes
+    AUTO_WARN: bool = True                 # Post warning in group
+    AUTO_BAN: bool = True                  # Remove user on reaching MAX_STRIKES_BAN
+    AUTO_DELETE_SCAM_MESSAGE: bool = True  # Always delete the malicious message
 
     model_config = SettingsConfigDict(
         env_file=".env",

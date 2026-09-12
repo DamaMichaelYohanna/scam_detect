@@ -1,19 +1,21 @@
-# Telegram Anti-Scam Bot (FastAPI + Exa.ai + OpenAI)
+# 🛡️ Yeittu Sentinel: Telegram Anti-Scam Agent
 
-A high-performance FastAPI backend for a Telegram group bot that protects community members from scams, phishing, and wallet drainers by leveraging **Exa.ai** for real-time web content verification and **OpenAI (GPT-4o/mini)** for structured threat analysis.
+A real-time ambient AI agent built for Telegram communities that detects scams, phishing links, and wallet drainers by leveraging **Exa.ai** for live web verification and **OpenAI (GPT-4o-mini)** / **Google Gemini (Gemini 3.6-flash)** for structured threat reasoning.
+
+Built for the **[AI Tinkerers Hackathon - Agents, Everywhere (Abuja)](https://abuja.aitinkerers.org/hackathons/h_g9To6f0UerQ)**.  
+📖 Read the full **[Hackathon Submission Document (SUBMISSION.md)](SUBMISSION.md)**.
 
 ---
 
-## 🌟 How It Works
+## 🌟 Key Highlights & Moderation Policy
 
-1. **Telegram Webhook Ingestion**: Receives incoming group messages via `/webhook/telegram` and verifies the Telegram secret token.
-2. **Instant 200 OK**: Dispatches detection tasks asynchronously to background workers to prevent webhook timeouts.
-3. **Smart Heuristic Pre-filter**: Instantly extracts URLs, crypto addresses (ETH, SOL, BTC), and high-risk trigger keywords (*airdrop*, *free mint*, *connect wallet*, *dm admin*, etc.). Safe conversations bypass deep scans to save API costs.
-4. **Live Web Intelligence (Exa.ai)**:
-   - Fetches live page title, DOM text, and summaries for suspicious links.
-   - Searches the web for real-time domain reputation and scam/hack reports.
-5. **Structured Threat Evaluation (OpenAI)**: Evaluates the message and Exa web context against known phishing vectors, wallet drainers, and social engineering attacks.
-6. **Automated Group Warning**: When a scam is identified above the confidence threshold (e.g., $\ge 70\%$), the bot replies directly to the offending message in the Telegram group with a clear warning card and safety advice.
+1. **Ambient Stream Monitoring**: Intercepts Telegram messages in real time without requiring manual invocations.
+2. **Exa.ai Live Web Intelligence**: Reads live webpage content (`get_contents`) and checks domain reputation (`search_and_contents`).
+3. **Multi-Model Cognitive Engine**: Hot-swap between **Google Gemini 3.6-flash** and **OpenAI GPT-4o-mini** with structured outputs.
+4. **5-Strike Escalation System**:
+   - **Strike 1 & 2**: Immediate malicious message deletion + safety explanation card.
+   - **Strike 3 & 4**: Message deleted + **Public Strike Warning (3/5)**.
+   - **Strike 5**: Message deleted + **Automatic User Ban & Removal** from the group.
 
 ---
 

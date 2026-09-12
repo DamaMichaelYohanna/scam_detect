@@ -5,6 +5,7 @@ from app.config import settings
 from app.services.analyzer_service import analyzer_service
 from app.services.detector_service import detector_service
 from app.services.exa_service import exa_service
+from app.services.strike_service import strike_service
 from app.services.telegram_service import telegram_service
 
 logger = logging.getLogger(__name__)
@@ -54,27 +55,39 @@ async def process_scam_detection(
 
         # 3. If classified as scam and confidence meets threshold:
         if scam_result.is_scam and scam_result.confidence >= settings.RISK_THRESHOLD:
-            was_banned = False
+            # Record strike for user in this chat
+            strike_count = strike_service.record_strike(chat_id, user_id) if user_id else 1
+            max_strikes = settings.MAX_STRIKES_BAN
+            warn_threshold = settings.WARN_STRIKES
+
             was_deleted = False
+            was_banned = False
 
-            # High confidence trigger (>= BAN_THRESHOLD): Auto-ban user & delete message
-            if scam_result.confidence >= settings.BAN_THRESHOLD:
-                if settings.AUTO_DELETE_SCAM_MESSAGE:
-                    was_deleted = await telegram_service.delete_message(chat_id, message_id)
+            # Always delete scam messages immediately
+            if settings.AUTO_DELETE_SCAM_MESSAGE:
+                was_deleted = await telegram_service.delete_message(chat_id, message_id)
 
-                if settings.AUTO_BAN and user_id:
-                    was_banned = await telegram_service.ban_chat_member(chat_id, user_id)
+            # Check if user reached ban strike threshold (>= 5 strikes)
+            if strike_count >= max_strikes and settings.AUTO_BAN and user_id:
+                was_banned = await telegram_service.ban_chat_member(chat_id, user_id)
+                logger.warning(
+                    f"🚫 User {user_id} reached {strike_count}/{max_strikes} strikes! Banned from chat {chat_id}."
+                )
 
+            # Send public warning / notice if enabled (always at strikes >= 3 or if banned, or configurable)
             if settings.AUTO_WARN:
                 logger.warning(
                     f"⚠️ SCAM ACTION in chat {chat_id}: {scam_result.scam_type} "
-                    f"(Banned: {was_banned}, Deleted: {was_deleted}). Sending announcement."
+                    f"(User: @{user_name}, Strikes: {strike_count}/{max_strikes}, "
+                    f"Banned: {was_banned}, Deleted: {was_deleted}). Sending announcement."
                 )
                 await telegram_service.send_scam_warning(
                     chat_id=chat_id,
                     reply_to_message_id=message_id,
                     result=scam_result,
                     user_name=user_name,
+                    strike_count=strike_count,
+                    max_strikes=max_strikes,
                     was_banned=was_banned,
                     was_deleted=was_deleted,
                 )
