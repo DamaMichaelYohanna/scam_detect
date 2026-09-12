@@ -130,10 +130,10 @@ pip install -r requirements.txt
 ```
 
 ### 2. Configure Environment Variables
-Edit `.env`:
+Edit `.env` (or use `.env.example`):
 ```env
 # Telegram
-TELEGRAM_BOT_TOKEN=8946767047:AAGkNfp-Z5mrjFxRDS7BfHhkGgNzk6opnl0
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
 
 # AI Provider ("gemini" or "openai")
 AI_PROVIDER=gemini

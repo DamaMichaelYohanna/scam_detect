@@ -46,14 +46,19 @@ yeittubot/
 
 ---
 
+# 🤖 Live Bot Access Link
+👉 **Add Bot to your Telegram Group**: **[https://t.me/yeittubot](https://t.me/yeittubot)** (Username: `@yeittubot`)
+
+---
+
 ## 🚀 Quickstart Guide
 
 ### 1. Configure Environment Variables
-Edit [`.env`](file:///c:/Users/HomePC/yeittubot/.env):
+Edit `.env` (or copy `.env.example`):
 
 ```env
 # Telegram Bot
-TELEGRAM_BOT_TOKEN=8946767047:AAGkNfp-Z5mrjFxRDS7BfHhkGgNzk6opnl0
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
 
 # Exa.ai
 EXA_API_KEY=your_exa_api_key
